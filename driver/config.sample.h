@@ -38,3 +38,6 @@
 
 // For exponential curves.
 #define EXPONENT 2.0f
+
+// For sigmoid curves.
+#define MIDPOINT 5.0f
