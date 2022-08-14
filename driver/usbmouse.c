@@ -24,6 +24,7 @@
 #include <linux/init.h>
 #include <linux/usb/input.h>
 #include <linux/hid.h>
+#include <linux/version.h>
 
 /* for apple IDs */
 /*                                                              //Leetmouse Mod BEGIN
@@ -180,7 +181,12 @@ static int usb_mouse_probe(struct usb_interface *intf, const struct usb_device_i
         return -ENODEV;
 
     pipe = usb_rcvintpipe(dev, endpoint->bEndpointAddress);
-    maxp = usb_maxpacket(dev, pipe, usb_pipeout(pipe));
+
+    #if LINUX_VERSION_MAJOR >= 5 && LINUX_VERSION_PATCHLEVEL > 18
+        maxp = usb_maxpacket(dev, pipe);
+    #else
+        maxp = usb_maxpacket(dev, pipe, usb_pipeout(pipe));
+    #endif
 
     mouse = kzalloc(sizeof(struct usb_mouse), GFP_KERNEL);
     input_dev = input_allocate_device();
