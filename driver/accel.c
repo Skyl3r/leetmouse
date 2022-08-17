@@ -87,18 +87,18 @@ INLINE void updata_params(ktime_t now)
 // Acceleration happens here
 int accelerate(int *x, int *y, int *wheel)
 {
-	float delta_x, delta_y, delta_whl, ms, speed, accel_sens, product, motivity;
-    float e = 2.71828f;
+    float delta_x, delta_y, delta_whl, ms, speed, accel_sens, product, motivity;
+    const float e = 2.71828f;
     static long buffer_x = 0;
     static long buffer_y = 0;
     static long buffer_whl = 0;
     //Static float assignment should happen at compile-time and thus should be safe here. However, avoid non-static assignment of floats outside kernel_fpu_begin()/kernel_fpu_end()
-	static float carry_x = 0.0f;
+    static float carry_x = 0.0f;
     static float carry_y = 0.0f;
     static float carry_whl = 0.0f;
-	static float last_ms = 1.0f;
-	static ktime_t last;
-	ktime_t now;
+    static float last_ms = 1.0f;
+    static ktime_t last;
+    ktime_t now;
     int status = 0;
 
     // We can only safely use the FPU in an IRQ event when this returns 1.

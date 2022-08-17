@@ -16,25 +16,13 @@
 #define ACCELERATION 0.26f
 #define SENS_CAP 4.0f
 #define OFFSET 0.0f
-#define POST_SCALE_X 0.4f
-#define POST_SCALE_Y 0.4f
 #define SPEED_CAP 0.0f
 
-// Prescaler for different DPI values. 1.0f at 400 DPI. To adjust it for <your_DPI>, calculate 400/your_DPI
-
-// Generic @ 400 DPI
-#define PRE_SCALE_X 1.0f
-#define PRE_SCALE_Y 1.0f
-
-// Steelseries Rival 110 @ 7200 DPI
-//#define PRE_SCALE_X 0.0555555f
-//define PRE_SCALE_Y 0.0555555f
-
-// Steelseries Rival 600/650 @ 12000 DPI
-//#define PRE_SCALE_X 0.0333333f
-//#define PRE_SCALE_Y 0.0333333f
-
+// 1 for Linear, 2 for Classic and 3 for Motivity
 #define ACCELERATION_MODE 1
 
 // For exponential curves.
 #define EXPONENT 2.0f
+
+// For sigmoidal curves.
+#define MIDPOINT 1.0f
