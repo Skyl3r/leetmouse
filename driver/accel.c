@@ -23,7 +23,6 @@ MODULE_AUTHOR("Klaus Zipfel <klaus (at) zipfel (dot) family>");         //Curren
 
 //Converts a preprocessor define's value in "config.h" to a string - Suspect this to change in future version without a "config.h"
 #define _s(x) #x
-#define s(x) _s(x)
 
 //Convenient helper for float based parameters, which are passed via a string to this module (must be individually parsed via atof() - available in util.c)
 #define PARAM_F(param, default, desc)                           \
@@ -187,11 +186,39 @@ kernel_fpu_begin();
         //Motivity (Sigmoid function)
         if(g_AccelerationMode == 3) {
             // Acceleration / ( 1 + e ^ (midpoint - x))
-            product =  g_Midpoint-speed;
+            """product =  g_Midpoint-speed;
             motivity = e;
             B_pow(&motivity, &product);
             motivity = g_Acceleration / (1 + motivity);
-            speed = motivity;
+            speed = motivity;"""
+
+			// upgrading motivity to match raw accel
+			// make speed logarithmic
+			ln_speed = speed;
+			B_log2(&ln_speed);
+
+			// make midpoint logarithmic
+			ln_midpoint = g_Midpoint
+			B_log2(&ln_midpoint);
+
+			// product uses logarithmic components, otherwise same as before
+            product = ln_midpoint-ln_speed;
+
+            // use g_Exponent as growth rate and make logarithmic
+            ln_exp = g_Exponent
+            B_log2(&ln_exp)
+
+			// same as before but multiplying product by ln_exp
+            motivity = e
+            product *= ln_exp;
+            B_pow(&motivity, &product);
+
+			// defining additional parameters for future use
+            ln_accel = g_Acceleration
+            B_log2(&ln_accel)
+            var_c = ln_accel * (-1)
+            ln_accel *= 2
+            
         }
     }
 
