@@ -17,7 +17,6 @@
 #else
     #include <asm/fpu/api.h>
 #endif
-
 MODULE_AUTHOR("Christopher Williams <chilliams (at) gmail (dot) com>"); //Original idea of this module
 MODULE_AUTHOR("Klaus Zipfel <klaus (at) zipfel (dot) family>");         //Current maintainer
 
@@ -27,7 +26,7 @@ MODULE_AUTHOR("Klaus Zipfel <klaus (at) zipfel (dot) family>");         //Curren
 //Convenient helper for float based parameters, which are passed via a string to this module (must be individually parsed via atof() - available in util.c)
 #define PARAM_F(param, default, desc)                           \
     float g_##param = default;                                  \
-    static char* g_param_##param = s(default);                  \
+    static char* g_param_##param = _s(default);                  \
     module_param_named(param, g_param_##param, charp, 0644);    \
     MODULE_PARM_DESC(param, desc);
 
@@ -86,7 +85,7 @@ INLINE void updata_params(ktime_t now)
 // Acceleration happens here
 int accelerate(int *x, int *y, int *wheel)
 {
-	float delta_x, delta_y, delta_whl, ms, speed, accel_sens, product, motivity;
+	float delta_x, delta_y, delta_whl, ms, speed, accel_sens, product, motivity, lg, lm;
     float e = 2.71828f;
     static long buffer_x = 0;
     static long buffer_y = 0;
@@ -186,12 +185,15 @@ kernel_fpu_begin();
         //Motivity (Sigmoid function)
         if(g_AccelerationMode == 3) {
             // Acceleration / ( 1 + e ^ (midpoint - x))
-            """product =  g_Midpoint-speed;
+            /*
+            product =  g_Midpoint-speed;
             motivity = e;
             B_pow(&motivity, &product);
             motivity = g_Acceleration / (1 + motivity);
-            speed = motivity;"""
+            speed = motivity;
+            */
 
+            /*
 			// upgrading motivity to match raw accel
 			// make speed logarithmic
 			ln_speed = speed;
@@ -218,6 +220,38 @@ kernel_fpu_begin();
             B_log2(&ln_accel)
             var_c = ln_accel * (-1)
             ln_accel *= 2
+            */
+
+            //lg = e^exponent, exponent == "growth rate"
+            lg = e
+            B_pow(&lg, &exponent)
+
+            //lm = ln(midpoint)-ln(speed)
+            B_log2(&speed)
+            lm = midpoint
+            B_log2(&lm)
+            lm -= speed
+
+            //lim = 2ln(acceleration), acceleration == "motivity"
+            lim = acceleration
+            B_log2(&lim)
+            lim *= 2
+
+            //inner exponent = lg*lm
+            lg *= lm
+
+            //inner = 1+e^inner exponent
+            inner = e
+            B_pow(&inner, &lg)
+            inner += 1
+
+            //inner formula
+            inner = (lim/inner)+(0-(lim/2))
+
+            //final formula
+            speed = e
+            B_pow(&speed, &inner)
+            speed *= sensitivity
             
         }
     }
