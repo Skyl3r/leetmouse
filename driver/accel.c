@@ -85,7 +85,7 @@ INLINE void updata_params(ktime_t now)
 // Acceleration happens here
 int accelerate(int *x, int *y, int *wheel)
 {
-	float delta_x, delta_y, delta_whl, ms, speed, accel_sens, product, motivity, lg, lm;
+	float delta_x, delta_y, delta_whl, ms, speed, accel_sens, lg, lm, lim, inner;
     float e = 2.71828f;
     static long buffer_x = 0;
     static long buffer_y = 0;
@@ -193,65 +193,37 @@ kernel_fpu_begin();
             speed = motivity;
             */
 
-            /*
-			// upgrading motivity to match raw accel
-			// make speed logarithmic
-			ln_speed = speed;
-			B_log2(&ln_speed);
-
-			// make midpoint logarithmic
-			ln_midpoint = g_Midpoint
-			B_log2(&ln_midpoint);
-
-			// product uses logarithmic components, otherwise same as before
-            product = ln_midpoint-ln_speed;
-
-            // use g_Exponent as growth rate and make logarithmic
-            ln_exp = g_Exponent
-            B_log2(&ln_exp)
-
-			// same as before but multiplying product by ln_exp
-            motivity = e
-            product *= ln_exp;
-            B_pow(&motivity, &product);
-
-			// defining additional parameters for future use
-            ln_accel = g_Acceleration
-            B_log2(&ln_accel)
-            var_c = ln_accel * (-1)
-            ln_accel *= 2
-            */
-
             //lg = e^exponent, exponent == "growth rate"
-            lg = e
-            B_pow(&lg, &exponent)
+            lg = g_Exponent;
+            B_exp(&lg);
 
             //lm = ln(midpoint)-ln(speed)
-            B_log2(&speed)
-            lm = midpoint
-            B_log2(&lm)
-            lm -= speed
+            B_log(&speed);
+            lm = g_Midpoint;
+            B_log(&lm);
+            lm -= speed;
 
             //lim = 2ln(acceleration), acceleration == "motivity"
-            lim = acceleration
-            B_log2(&lim)
-            lim *= 2
+            lim = g_Acceleration;
+            B_log(&lim);
+            lim *= 2;
 
             //inner exponent = lg*lm
-            lg *= lm
+            lg *= lm;
 
             //inner = 1+e^inner exponent
-            inner = e
-            B_pow(&inner, &lg)
-            inner += 1
+            B_exp(&lg);
+            lg += 1;
 
             //inner formula
-            inner = (lim/inner)+(0-(lim/2))
+            lg = (lim/lg)+(0-(lim/2));
 
             //final formula
-            speed = e
-            B_pow(&speed, &inner)
-            speed *= sensitivity
+            B_exp(&lg);
+            speed = lg*g_Sensitivity;
+            if (speed < 0) {
+                speed = -speed;
+            }
             
         }
     }
