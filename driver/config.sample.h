@@ -19,6 +19,7 @@
 #define POST_SCALE_X 0.4f
 #define POST_SCALE_Y 0.4f
 #define SPEED_CAP 0.0f
+#define MIDPOINT 15.0f
 
 // Prescaler for different DPI values. 1.0f at 400 DPI. To adjust it for <your_DPI>, calculate 400/your_DPI
 
