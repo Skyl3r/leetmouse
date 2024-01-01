@@ -52,6 +52,10 @@ PARAM_F(SensitivityCap, SENS_CAP,           "Cap maximum sensitivity.");
 PARAM_F(Offset,         OFFSET,             "Mouse base sensitivity.");
 PARAM_F(Exponent,       EXPONENT,           "Exponent for algorithms that use it"); 
 PARAM_F(Midpoint,       MIDPOINT,           "Midpoint for sigmoid function"); 
+PARAM_F(DomainX,        DOMAIN_X,           "Domain of X"); 
+PARAM_F(DomainY,        DOMAIN_Y,           "Domain of Y"); 
+PARAM_F(RangeX,         RANGE_X,            "Range of X"); 
+PARAM_F(RangeY,         RANGE_Y,            "Range of Y"); 
 //PARAM_F(AngleAdjustment,XXX,            "");           //Not yet implemented. Douptful, if I will ever add it - Not very useful and needs me to implement trigonometric functions from scratch in C.
 //PARAM_F(AngleSnapping,  XXX,            "");           //Not yet implemented. Douptful, if I will ever add it - Not very useful and needs me to implement trigonometric functions from scratch in C.
 PARAM_F(ScrollsPerTick, SCROLLS_PER_TICK,   "Amount of lines to scroll per scroll-wheel tick.");
@@ -78,6 +82,10 @@ INLINE void updata_params(ktime_t now)
     PARAM_UPDATE(ScrollsPerTick);
     PARAM_UPDATE(Exponent);
     PARAM_UPDATE(Midpoint);
+    PARAM_UPDATE(DomainX);
+    PARAM_UPDATE(DomainY);
+    PARAM_UPDATE(RangeX);
+    PARAM_UPDATE(RangeY);
 }
 
 // ########## Acceleration code
@@ -85,8 +93,8 @@ INLINE void updata_params(ktime_t now)
 // Acceleration happens here
 int accelerate(int *x, int *y, int *wheel)
 {
-	float delta_x, delta_y, delta_whl, ms, speed, accel_sens, lg, lm, lim, inner;
-    float e = 2.71828f;
+	float delta_x, delta_y, delta_whl, ms, speed, accel_sens, 
+	    lg, lm, lim;
     static long buffer_x = 0;
     static long buffer_y = 0;
     static long buffer_whl = 0;
@@ -115,7 +123,7 @@ int accelerate(int *x, int *y, int *wheel)
 //Not doing this caused the FPU state to get randomly screwed up (https://github.com/systemofapwne/leetmouse/issues/4), making the cursor to get stuck on the left screen. Especially when playing certain videos in the browser.
 kernel_fpu_begin();
     accel_sens = g_Sensitivity;
-
+    
     delta_x = (float) (*x);
     delta_y = (float) (*y);
     delta_whl = (float) (*wheel);
@@ -149,6 +157,10 @@ kernel_fpu_begin();
 
     //Update acceleration parameters periodically
     updata_params(now);
+
+    //Divide delta by domain before acceleration is applied
+    delta_x /= g_DomainX;
+    delta_y /= g_DomainY;
 
     //Get distance traveled
     speed = delta_x * delta_x + delta_y * delta_y;
@@ -184,15 +196,6 @@ kernel_fpu_begin();
 
         //Motivity (Sigmoid function)
         if(g_AccelerationMode == 3) {
-            // Acceleration / ( 1 + e ^ (midpoint - x))
-            /*
-            product =  g_Midpoint-speed;
-            motivity = e;
-            B_pow(&motivity, &product);
-            motivity = g_Acceleration / (1 + motivity);
-            speed = motivity;
-            */
-
             //lg = e^exponent, exponent == "growth rate"
             lg = g_Exponent;
             B_exp(&lg);
@@ -235,6 +238,12 @@ kernel_fpu_begin();
     //Like RawAccel, sensitivity will be a final multiplier:
     delta_x *= g_Sensitivity;
     delta_y *= g_Sensitivity;
+
+    //Multiply by both domain and range
+    delta_x *= g_DomainX;
+    delta_y *= g_DomainY;
+    delta_x *= g_RangeX;
+    delta_y *= g_RangeY;
 
     delta_x += carry_x;
     delta_y += carry_y;
