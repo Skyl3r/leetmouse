@@ -10,7 +10,7 @@ SRC=$SRC_NAME.tar.xz
 
 # Create PKGBUILD for AUR and the bin package below for release via github
 if [ "$1" = "aur" ]; then
-    SRC='https://github.com/systemofapwne/leetmouse/releases/download/v$pkgver/leetmouse-$pkgver.tar.xz'
+    SRC='https://github.com/AboyBboy/leetmouse/releases/download/v$pkgver/leetmouse-$pkgver.tar.xz'
     echo $SRC
 fi
 
